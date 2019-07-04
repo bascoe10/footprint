@@ -1,12 +1,18 @@
 import os, argparse
 from git import Repo, GitCommandError
 
-exclude_list = ['.git', '.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public']
+exclude_map = {
+    'rails': ['.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public', '.env'],
+    'default': ['.git']
+}
 class FootPrint(object):
 
-    def __init__(self, repo, exclude, directory):
+    def __init__(self, repo, exclude, directory, project):
         self.repo = repo
-        self.excl = exclude_list + exclude
+        self.excl = exclude_map['default'] + exclude
+        if project:
+            self.excl += exclude_map[project]
+
         self.repo_metrics = {}
         self.dir = directory
 
@@ -51,12 +57,13 @@ class FootPrint(object):
 
             
 
-
+# TODO switch to docopt
 def parse_argument():
     parser = argparse.ArgumentParser(description='Generate stats of users that have contributed to a give repo')
     parser.add_argument("--repo", help="Repo to run footprint against", default=".")
     parser.add_argument("--exclude", help="Directory/files to exclude")
     parser.add_argument("--directory", default=".")
+    parser.add_argument("--project")
     return parser.parse_args()
 
 
@@ -69,7 +76,7 @@ def main():
     # check that the repository loaded correctly
     if not repo.bare:
         print('Repo at {} successfully loaded.'.format(repo_path))
-        fp = FootPrint(repo, args.exclude if args.exclude else [], args.directory)
+        fp = FootPrint(repo, args.exclude if args.exclude else [], args.directory, args.project)
         fp.run()
         print(fp.repo_metrics)
         # print_repository(repo)
