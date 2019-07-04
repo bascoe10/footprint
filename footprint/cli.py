@@ -19,6 +19,9 @@ class FootPrint(object):
     def run(self):
         self.__compute_dir_metrics(self.dir)
 
+    def print_result(self):
+        print(self.repo_metrics)
+
     def __compute_file_metrics(self, file_name):
         print("Computing metrics for File - {}".format(file_name))
         file_metrics =  {}

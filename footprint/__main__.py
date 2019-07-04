@@ -23,13 +23,7 @@ def main():
         print('Repo at {} successfully loaded.'.format(repo_path))
         fp = FootPrint(repo, args.exclude if args.exclude else [], args.directory, args.project)
         fp.run()
-        print(fp.repo_metrics)
-        # print_repository(repo)
-        # create list of commits then print some of them to stdout
-        # commits = list(repo.iter_commits('master'))[:COMMITS_TO_PRINT]
-        # for commit in commits:
-        #     print_commit(commit)
-        #     pass
+        fp.print_result()
     else:
         print('Could not load repository at {} :('.format(repo_path))
 
