@@ -1,4 +1,5 @@
 import os, argparse
+from functools import reduce
 from git import Repo, GitCommandError
 
 exclude_map = {
@@ -7,23 +8,39 @@ exclude_map = {
 }
 class FootPrint(object):
 
-    def __init__(self, repo, exclude, directory, project):
+    def __init__(self, repo, exclude, directory, project, verbose=False):
         self.repo = repo
         self.excl = exclude_map['default'] + exclude
         if project:
             self.excl += exclude_map[project]
 
         self.repo_metrics = {}
+        self.repo_metrics_ptg = {}
         self.dir = directory
+        self.verbose = verbose
 
     def run(self):
         self.__compute_dir_metrics(self.dir)
+        self.__compute_percentage_metrics()
 
     def print_result(self):
         print(self.repo_metrics)
 
+    def metrics(self):
+        return(self.repo_metrics)
+
+    def percentage_metrics(self):
+        return(self.repo_metrics_ptg)
+
+    def __compute_percentage_metrics(self):
+        total_lines = reduce(lambda x, y: x + y, self.repo_metrics.values())
+        for author in self.repo_metrics.keys():
+            self.repo_metrics_ptg[author] = round(self.repo_metrics[author] * 100 / total_lines)
+        
+
     def __compute_file_metrics(self, file_name):
-        print("Computing metrics for File - {}".format(file_name))
+        if self.verbose: print("Computing metrics for File - {}".format(file_name))
+
         file_metrics =  {}
         try:
             line_blames = self.repo.blame(str(self.repo.head.commit.hexsha), file_name)
@@ -36,9 +53,9 @@ class FootPrint(object):
         return file_metrics
 
     def __compute_dir_metrics(self, dir_name):
-        print(dir_name)
+        if self.verbose: print(dir_name)
         dir_path = self.repo.working_tree_dir + "/" + dir_name if dir_name != "." else self.repo.working_tree_dir + "/"
-        print("Computing metrics for Directory - {}".format(dir_path))
+        if self.verbose: print("Computing metrics for Directory - {}".format(dir_path))
         metrics = {}
 
         for entry in os.scandir(path=dir_path):
@@ -73,7 +90,7 @@ def parse_argument():
 def main():
     args = parse_argument()
 
-    repo_path = os.getenv('GIT_REPO_PATH')
+    repo_path = os.getenv('GIT_REPO_PATH') or "."
     # Repo object used to programmatically interact with Git repositories
     repo = Repo(repo_path)
     # check that the repository loaded correctly

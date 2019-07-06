@@ -19,7 +19,7 @@ def main():
     f = Figlet(font='slant')
     print(f.renderText('FootPrint'))
 
-    repo_path = os.getenv('GIT_REPO_PATH')
+    repo_path = os.getenv('GIT_REPO_PATH') or "."
     # Repo object used to programmatically interact with Git repositories
     repo = Repo(repo_path)
     # check that the repository loaded correctly
@@ -27,7 +27,7 @@ def main():
         print('Repo at {} successfully loaded.'.format(repo_path))
         fp = FootPrint(repo, args.exclude if args.exclude else [], args.directory, args.project)
         fp.run()
-        fp.print_result()
+        print(fp.percentage_metrics())
     else:
         print('Could not load repository at {} :('.format(repo_path))
 
