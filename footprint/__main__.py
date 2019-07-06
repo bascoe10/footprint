@@ -1,5 +1,6 @@
 import os, argparse
 from git import Repo
+from pyfiglet import Figlet
 from footprint.cli import FootPrint
 
 # TODO switch to docopt
@@ -14,6 +15,9 @@ def parse_argument():
 
 def main():
     args = parse_argument()
+
+    f = Figlet(font='slant')
+    print(f.renderText('FootPrint'))
 
     repo_path = os.getenv('GIT_REPO_PATH')
     # Repo object used to programmatically interact with Git repositories
