@@ -8,7 +8,7 @@ exclude_map = {
 }
 class FootPrint(object):
 
-    def __init__(self, repo, exclude, directory, project, verbose=False):
+    def __init__(self, repo, exclude, directory, project=None, verbose=False):
         self.repo = repo
         self.excl = exclude_map['default'] + exclude
         if project:

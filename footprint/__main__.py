@@ -3,14 +3,27 @@ from git import Repo
 from pyfiglet import Figlet
 from footprint.cli import FootPrint
 
+class FPArgument(object):
+
+    def __init__(self, parser):
+        self.repo = parser.repo
+        if parser.exclude.strip() == "":
+            self.exclude = []
+        else:
+            self.exclude = parser.exclude.split(' ')
+
+        self.directory = parser.directory
+        self.project = parser.project
+
+
 # TODO switch to docopt
 def parse_argument():
     parser = argparse.ArgumentParser(description='Generate stats of users that have contributed to a give repo')
-    parser.add_argument("--repo", help="Repo to run footprint against", default=".")
-    parser.add_argument("--exclude", help="Directory/files to exclude")
-    parser.add_argument("--directory", default=".")
-    parser.add_argument("--project")
-    return parser.parse_args()
+    parser.add_argument('--repo', help='Repo to run footprint against', default='.')
+    parser.add_argument('--exclude', help='Directory/files to exclude', default= "")
+    parser.add_argument('--directory', default='.')
+    parser.add_argument('--project')
+    return FPArgument(parser.parse_args())
 
 
 def main():
@@ -19,17 +32,16 @@ def main():
     f = Figlet(font='slant')
     print(f.renderText('FootPrint'))
 
-    repo_path = os.getenv('GIT_REPO_PATH') or "."
     # Repo object used to programmatically interact with Git repositories
-    repo = Repo(repo_path)
+    repo = Repo(args.repo)
     # check that the repository loaded correctly
     if not repo.bare:
-        print('Repo at {} successfully loaded.'.format(repo_path))
-        fp = FootPrint(repo, args.exclude if args.exclude else [], args.directory, args.project)
+        print('Repo at {} successfully loaded.'.format(args.repo))
+        fp = FootPrint(repo, args.exclude, args.directory, args.project)
         fp.run()
         print(fp.percentage_metrics())
     else:
-        print('Could not load repository at {} :('.format(repo_path))
+        print('Could not load repository at {} :('.format(args.repo))
 
 if __name__ == "__main__":
     main()
