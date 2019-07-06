@@ -6,6 +6,23 @@ exclude_map = {
     'rails': ['.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public', '.env'],
     'default': ['.git']
 }
+
+class Author(object):
+
+    def __init__(self, name, email):
+        if ',' in name:
+            lname, fname = name.split(',')
+            self.name = fname.strip() + ' ' + lname.strip()
+        else:
+            self.name = name
+        self.email = email
+
+    def __eq__(self, obj):
+        return (self.name == obj.name or self.email == obj.email)
+
+    def __hash__(self):
+        return hash(self.name)
+
 class FootPrint(object):
 
     def __init__(self, repo, exclude, directory, project=None, verbose=False):
@@ -35,7 +52,7 @@ class FootPrint(object):
     def __compute_percentage_metrics(self):
         total_lines = reduce(lambda x, y: x + y, self.repo_metrics.values())
         for author in self.repo_metrics.keys():
-            self.repo_metrics_ptg[author] = round(self.repo_metrics[author] * 100 / total_lines)
+            self.repo_metrics_ptg[author] = round(self.repo_metrics[author] * 100 / total_lines, 2)
         
 
     def __compute_file_metrics(self, file_name):
@@ -44,10 +61,10 @@ class FootPrint(object):
         file_metrics =  {}
         try:
             line_blames = self.repo.blame(str(self.repo.head.commit.hexsha), file_name)
-            line_authors = list(map(lambda x: x[0].author.name, line_blames))
+            line_authors = list(map(lambda x: Author(x[0].author.name, x[0].author.email), line_blames))
             authors = set(line_authors)
             for author in authors:
-                file_metrics[author] = line_authors.count(author)
+                file_metrics[author.name] = line_authors.count(author)
         except GitCommandError as identifier:
             return {}
         return file_metrics
