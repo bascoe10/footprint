@@ -1,6 +1,7 @@
 import os, argparse
 from functools import reduce
 from git import Repo, GitCommandError
+import sys
 
 exclude_map = {
     'rails': ['.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public', '.env'],
@@ -22,6 +23,33 @@ class Author(object):
 
     def __hash__(self):
         return hash(self.name)
+
+TICK = '▇'
+SM_TICK = '▏'
+
+class FPPrinter(object):
+
+    def __init__(self, metrics):
+        self.metrics = metrics
+
+    def hbar_chart(self):
+        metrics = zip(self.metrics.keys(), self.metrics.values())
+        metrics = sorted(metrics, key=lambda x: x[1], reverse=True)
+        max_key_length = self.__compute_key_width(self.metrics.keys())
+        
+        sys.stdout.write('\033[92m')
+
+        for entry in metrics:
+            progress_bar = SM_TICK if entry[1] < 1 else (SM_TICK * int(entry[1]))
+            output = "{:<{x}}: {bar} {percent}%\n".format(entry[0], x=max_key_length, bar=progress_bar, percent=entry[1])
+            sys.stdout.write(output)
+
+        sys.stdout.write('\033[0m')
+
+    def __compute_key_width(self, args):
+        return max(map(lambda x: len(x), args))
+        
+
 
 class FootPrint(object):
 

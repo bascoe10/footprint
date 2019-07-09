@@ -1,7 +1,7 @@
 import os, argparse
 from git import Repo
 from pyfiglet import Figlet
-from footprint.cli import FootPrint
+from footprint.cli import FootPrint, FPPrinter
 
 class FPArgument(object):
 
@@ -39,7 +39,9 @@ def main():
         print('Repo at {} successfully loaded.'.format(args.repo))
         fp = FootPrint(repo, args.exclude, args.directory, args.project)
         fp.run()
-        print(fp.percentage_metrics())
+        printer = FPPrinter(fp.percentage_metrics())
+        printer.hbar_chart()
+        # print(fp.percentage_metrics())
     else:
         print('Could not load repository at {} :('.format(args.repo))
 
