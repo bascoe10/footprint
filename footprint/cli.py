@@ -2,6 +2,7 @@ import os, argparse
 from functools import reduce
 from git import Repo, GitCommandError
 import sys
+from threading import BoundedSemaphore, Thread
 
 exclude_map = {
     'rails': ['.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public', '.env'],
@@ -27,6 +28,8 @@ class Author(object):
 TICK = '▇'
 SM_TICK = '▏'
 
+COLORS = []
+
 class FPPrinter(object):
 
     def __init__(self, metrics):
@@ -36,15 +39,18 @@ class FPPrinter(object):
         metrics = zip(self.metrics.keys(), self.metrics.values())
         metrics = sorted(metrics, key=lambda x: x[1], reverse=True)
         max_key_length = self.__compute_key_width(self.metrics.keys())
-        
-        sys.stdout.write('\033[92m')
+
+        color_index = 0
 
         for entry in metrics:
+            sys.stdout.write(f'\033[{range(91,97)[color_index % 6]}m')
             progress_bar = SM_TICK if entry[1] < 1 else (SM_TICK * int(entry[1]))
             output = "{:<{x}}: {bar} {percent}%\n".format(entry[0], x=max_key_length, bar=progress_bar, percent=entry[1])
             sys.stdout.write(output)
+            sys.stdout.write('\033[0m')
+            color_index += 1
 
-        sys.stdout.write('\033[0m')
+        
 
     def __compute_key_width(self, args):
         return max(map(lambda x: len(x), args))
@@ -56,6 +62,7 @@ class FootPrint(object):
     def __init__(self, repo, exclude, directory, project=None, verbose=False):
         self.repo = repo
         self.excl = exclude_map['default'] + exclude
+
         if project:
             self.excl += exclude_map[project]
 
@@ -63,9 +70,17 @@ class FootPrint(object):
         self.repo_metrics_ptg = {}
         self.dir = directory
         self.verbose = verbose
+        self.semaphore = BoundedSemaphore(1)
+        self.threaded = False
 
     def run(self):
-        self.__compute_dir_metrics(self.dir)
+        if self.threaded:
+            tr = Thread(target=self.__compute_dir_metrics, args=(self.dir,))
+            tr.start()
+            tr.join()
+        else:
+            self.__compute_dir_metrics(self.dir)
+
         self.__compute_percentage_metrics()
 
     def print_result(self):
@@ -92,17 +107,27 @@ class FootPrint(object):
             line_authors = list(map(lambda x: Author(x[0].author.name, x[0].author.email), line_blames))
             authors = set(line_authors)
             for author in authors:
-                file_metrics[author.name] = line_authors.count(author)
+                # file_metrics[author.name] = line_authors.count(author)
+                try:
+                    if self.threaded:
+                        self.semaphore.acquire()
+
+                    if self.repo_metrics.get(author.name):
+                        self.repo_metrics[author.name] += line_authors.count(author)
+                    else:
+                        self.repo_metrics[author.name] = line_authors.count(author)
+                finally:
+                    if self.threaded:
+                        self.semaphore.release()
         except GitCommandError as identifier:
-            return {}
-        return file_metrics
+            return
 
     def __compute_dir_metrics(self, dir_name):
         if self.verbose: print(dir_name)
         dir_path = self.repo.working_tree_dir + "/" + dir_name if dir_name != "." else self.repo.working_tree_dir + "/"
         if self.verbose: print("Computing metrics for Directory - {}".format(dir_path))
         metrics = {}
-
+        trs = []
         for entry in os.scandir(path=dir_path):
             if entry.name in self.excl:
                 continue
@@ -111,11 +136,15 @@ class FootPrint(object):
             file_name = dir_name+"/"+entry.name if dir_name != "." else entry.name
 
             if entry.is_file():
-                metrics = self.__compute_file_metrics(file_name)
-                for key in metrics.keys():
-                    if self.repo_metrics.get(key):
-                        self.repo_metrics[key] += metrics[key]
-                    else:
-                        self.repo_metrics[key] = metrics[key]
+                self.__compute_file_metrics(file_name)
             else:
-                self.__compute_dir_metrics(file_name)
+                if self.threaded:
+                    tr = Thread(target=self.__compute_dir_metrics, args=(file_name,))
+                    tr.start()
+                    trs.append(tr)
+                else:
+                    self.__compute_dir_metrics(file_name)
+
+        if self.threaded:
+            for tr in trs:
+                tr.join()
