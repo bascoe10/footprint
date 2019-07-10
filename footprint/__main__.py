@@ -1,5 +1,4 @@
 import os, argparse
-from git import Repo
 from pyfiglet import Figlet
 from footprint.cli import FootPrint, FPPrinter
 
@@ -33,17 +32,18 @@ def main():
     print(f.renderText('FootPrint'))
 
     # Repo object used to programmatically interact with Git repositories
-    repo = Repo(args.repo)
+    # repo = Repo(args.repo)
     # check that the repository loaded correctly
-    if not repo.bare:
-        print('Repo at {} successfully loaded.'.format(args.repo))
-        fp = FootPrint(repo, args.exclude, args.directory, args.project)
-        fp.run()
-        printer = FPPrinter(fp.percentage_metrics())
-        printer.hbar_chart()
+    # if not repo.bare:
+        
+    fp = FootPrint(args.repo, args.exclude, args.directory, args.project)
+    print('Repo at {} successfully loaded.'.format(args.repo))
+    fp.run()
+    printer = FPPrinter(fp.percentage_metrics())
+    printer.hbar_chart()
         # print(fp.percentage_metrics())
-    else:
-        print('Could not load repository at {} :('.format(args.repo))
+    # else:
+    #     print('Could not load repository at {} :('.format(args.repo))
 
 if __name__ == "__main__":
     main()
