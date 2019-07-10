@@ -30,20 +30,12 @@ def main():
 
     f = Figlet(font='slant')
     print(f.renderText('FootPrint'))
-
-    # Repo object used to programmatically interact with Git repositories
-    # repo = Repo(args.repo)
-    # check that the repository loaded correctly
-    # if not repo.bare:
         
     fp = FootPrint(args.repo, args.exclude, args.directory, args.project)
     print('Repo at {} successfully loaded.'.format(args.repo))
     fp.run()
     printer = FPPrinter(fp.percentage_metrics())
     printer.hbar_chart()
-        # print(fp.percentage_metrics())
-    # else:
-    #     print('Could not load repository at {} :('.format(args.repo))
 
 if __name__ == "__main__":
     main()
