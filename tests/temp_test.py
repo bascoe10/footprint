@@ -1,10 +1,12 @@
 import os, sys
 print(os.path.abspath(os.path.dirname(__file__)))
 from .context import footprint
-import footprint.cli
+from footprint.cli import FootPrint
 
 import pytest, inspect
 
 def test_footprint_import():
-    assert inspect.isclass(footprint.cli.FootPrint), 'FootPrint class is available in cli'
+    assert inspect.isclass(FootPrint), 'FootPrint class is available in cli'
+
+def test_footprint_with_bare_repo():
 
