@@ -1,3 +1,4 @@
 [
-  "tests/temp_test.py::test_footprint_import"
+  "tests/temp_test.py::test_footprint_import",
+  "tests/temp_test.py::test_footprint_with_bare_repo"
 ]
