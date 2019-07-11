@@ -4,5 +4,3 @@
 	bare = true
 	ignorecase = true
 	precomposeunicode = true
-[remote "origin"]
-	url = /Users/asesay068/Dev/python/footprint/tests/./test_repo
