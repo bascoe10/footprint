@@ -68,7 +68,7 @@ class FootPrint(object):
             raise exceptions.RepoNotFoundException(repo)
         
         if self.repo.bare:
-            raise AttributeError('Could not load repository at {} :('.format(repo))
+            raise exceptions.BareRepoException
             
         self.excl = exclude_map['default'] + exclude
 
