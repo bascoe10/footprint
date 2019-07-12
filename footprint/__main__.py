@@ -1,6 +1,7 @@
 import os, argparse
 from pyfiglet import Figlet
 from footprint.cli import FootPrint, FPPrinter
+from footprint.exceptions import RepoNotFoundException, BareRepoException
 
 class FPArgument(object):
 
@@ -30,12 +31,17 @@ def main():
 
     f = Figlet(font='slant')
     print(f.renderText('FootPrint'))
-        
-    fp = FootPrint(args.repo, args.exclude, args.directory, args.project)
-    print('Repo at {} successfully loaded.'.format(args.repo))
-    fp.run()
-    printer = FPPrinter(fp.percentage_metrics())
-    printer.hbar_chart()
+    
+    try:
+        fp = FootPrint(args.repo, args.exclude, args.directory, args.project)
+        print('Repo at {} successfully loaded.'.format(args.repo))
+        fp.run()
+        printer = FPPrinter(fp.percentage_metrics())
+        printer.hbar_chart()
+    except RepoNotFoundException:
+        print(f"Git repository not found at '{args.repo}'")
+    except BareRepoException:
+        print("Bare repo not supported")
 
 if __name__ == "__main__":
     main()
