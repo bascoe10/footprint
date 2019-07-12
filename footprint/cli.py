@@ -3,7 +3,8 @@ from functools import reduce
 from git import Repo, GitCommandError
 import sys
 from threading import BoundedSemaphore, Thread
-from git import Repo
+from git import Repo, InvalidGitRepositoryError
+from . import exceptions
 
 exclude_map = {
     'rails': ['.yardoc', 'node_modules', '.circle', 'tmp', 'coverage', 'public', '.env'],
@@ -61,7 +62,11 @@ class FPPrinter(object):
 class FootPrint(object):
 
     def __init__(self, repo, exclude, directory, project=None, verbose=False):
-        self.repo = Repo(repo)
+        try:
+            self.repo = Repo(repo)
+        except InvalidGitRepositoryError:
+            raise exceptions.RepoNotFoundException(repo)
+        
         if self.repo.bare:
             raise AttributeError('Could not load repository at {} :('.format(repo))
             
