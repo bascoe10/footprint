@@ -7,3 +7,6 @@
 ```
 A tool for computing the number of lines contributed to a git project per 
 commit author.
+
+## Example usuage
+`python -m footprint --repo <repo directory path> --project rails`
